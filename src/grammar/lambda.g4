@@ -1,35 +1,37 @@
 grammar lambda;
 
-root : term | EOF;
+root    : term  #regTerm
+        | EOF   #nothing
+        ;
 
-term : 
-        abstraction | 
-        application | 
-        var         |
-        atom        |
-        op;
-
-pterm : 
-        abstraction         | 
-        '(' application ')' | 
-        var                 |
-        atom                |
-        op;
+term    : abstraction   
+        | application   
+        | var           
+        | atom          
+        | op            
+        ;             
 
 
 abstraction :
-        <assoc=right> '\\' var '->' term ;
+        <assoc=right> '\\' left=var '->' right=term ;
 
-application : 
-        application term |
-        '(' ( op | abstraction) ')' term;
+application     : left=application right=term            #extApp                               
+                | '(' left=abstraction ')' right=term    #absApp
+                | '(' left=op ')' right=term             #opApp
+                ;
 
 
-var : ID;
+var     : ID
+        ;
 
-atom : NUM;
+atom    : 
+        NUM;
 
-op: (SUM | SUB | MUL | DIV) ;
+op      : SUM   #sumOp
+        | SUB   #subOp
+        | MUL   #mulOp
+        | DIV   #divOp
+        ;
 
 SUM : '+';
 SUB : '-';

@@ -6,9 +6,9 @@ def syntaxInfo(input):
     lexer = lambdaLexer(InputStream(input))
     token_stream = CommonTokenStream(lexer)
     parser = lambdaParser(token_stream)
-    tree = parser.root()
+    parseTree = parser.root()
     
     numErrors = parser.getNumberOfSyntaxErrors()
-    syntaxExpr = tree.toStringTree(recog=parser)
+    syntaxExpr = parseTree.toStringTree(recog=parser)
     
-    return numErrors, syntaxExpr
+    return parseTree, numErrors, syntaxExpr
