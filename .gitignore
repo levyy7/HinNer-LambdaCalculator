@@ -3,7 +3,4 @@
 
 *.interp
 *.tokens
-src/grammar/lambdaLexer.py
-src/grammar/lambdaParser.py
-src/grammar/lambdaVisitor.py
 src/grammar/__pycache__
