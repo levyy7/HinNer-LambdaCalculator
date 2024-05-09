@@ -6,4 +6,7 @@
 src/grammar/lambdaLexer.py
 src/grammar/lambdaParser.py
 src/grammar/lambdaVisitor.py
-src/grammar/__pycache__
+
+# Python temporary data
+
+*__pycache__*
