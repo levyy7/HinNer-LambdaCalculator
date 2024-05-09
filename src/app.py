@@ -3,16 +3,13 @@ from grammar.syntaxAnalyzer import syntaxInfo
 from visitor.LambdaVisitorExpanded import LambdaVisitorExpanded
 from visitor.SemanticTree import SemanticTree
 from type.typeTable import createTypeTable, addRowsTable
+from pickle import dumps, loads
 
 st.title("HinNer - Lambda Calculator")
 
-typeDict = {
-    '2'  : 'N',
-    '(+)': 'N -> N -> N'
-}
-
-
-
+# If 
+if 'typeDict' not in st.session_state:
+    st.session_state['typeDict'] = dumps({})
 
 user_input = st.text_input("Lambda Expression:", "")
 
@@ -24,13 +21,18 @@ if numErrors > 0:
 else:
     visitor = LambdaVisitorExpanded()
     expr = visitor.visit(parseTree)
+
+
+    # Recover type table:
+    typeDict = loads(st.session_state['typeDict'])
+
     dotTree = SemanticTree(None).toDOT()
     
     if type(expr) is SemanticTree:
         dotTree = expr.toDOT()
     else:
         print('llego')
-        print(next(iter( expr.items() )))
+        #print(next(iter( expr.items() )))
         typeDict.update(expr)
         
     cols = st.columns(2)
@@ -38,4 +40,8 @@ else:
         st.graphviz_chart(dotTree)
     with cols[1]:
         createTypeTable(list(typeDict.keys()), list(typeDict.values()))
+
+
+    # Store typeDict
+    st.session_state['typeDict'] = dumps(typeDict)
     

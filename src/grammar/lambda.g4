@@ -1,8 +1,8 @@
 grammar lambda;
 
-root    : term  #regTerm
-        | type  #typeTerm
-        | EOF   #nothing
+root    : term EOF  #regTerm
+        | type EOF  #typeTerm
+        | EOF       #nothing
         ;
 
 type    : left=NUM '::' right=CAPS                                              #literalType
@@ -13,7 +13,7 @@ term    : abstraction
         | application   
         | var           
         | atom          
-        | op            
+//      | op            
         ;             
 
 
