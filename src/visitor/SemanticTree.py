@@ -1,6 +1,26 @@
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, List
 from enum import Enum
+from functools import reduce
+
+#Type classes
+@dataclass
+class UndefinedType:
+    id: str
+    
+    def toString(self):
+        return self.id
+
+@dataclass 
+class DefinedType:
+    tipus: List[str]
+    
+    def toString(self):
+        return reduce((lambda x,y : x + ' -> ' + y), self.tipus[1:], self.tipus[0])
+    
+VarType = DefinedType | UndefinedType
+
+
 
 class ArithmeticOP(Enum):
     SUM = '+'
@@ -11,41 +31,48 @@ class ArithmeticOP(Enum):
 @dataclass
 class Terminal:
     val: int
+    tipus: VarType = field(default=UndefinedType('-1'))
+    
+    def toString(self):
+        return f'{str(self.val)} \n {self.tipus.toString()}'
 
 @dataclass
 class Operator:
     op: ArithmeticOP
+    tipus: VarType = field(default=UndefinedType('-1'))
+    
+    def toString(self):
+        return f'{self.op.value} \n {self.tipus.toString()}'
 
 @dataclass
 class Variable:
     id: str
+    tipus: VarType = field(default=UndefinedType('-1'))
+    
+    def toString(self):
+        return f'{self.id} \n {self.tipus.toString()}'
 
 @dataclass
 class Application:
     function: Union['Operator','Application']
     argument: 'Term'
+    tipus: VarType = field(default=UndefinedType('-1'))
+    
+    def toString(self):
+        return f'@ \n {self.tipus.toString()}'
   
 @dataclass
 class Abstraction:
     input: 'Variable'
     output: 'Term'
+    tipus: VarType = field(default=UndefinedType('-1'))
+    
+    def toString(self):
+        return f'λ \n {self.tipus.toString()}'
+
 
 
 Term = Terminal | Operator | Variable | Application | Abstraction
-    
-def termToString(f):
-    match f:
-        case Abstraction(inp, out):
-            return 'λ'
-        case Application(func, arg):
-            return '@'
-        case Variable(iden):
-            return iden
-        case Operator(op):
-            return op.value
-        case Terminal(val):
-            return str(val)
-
 
 
 @dataclass 
@@ -53,7 +80,71 @@ class SemanticTree:
     root: Term
     count: int = field(default=0)
     
+    
+    def inferTypes(self, typeDict):
+        self.count = 0
+        labelDict = {}
+        
+        self.initializeTypes(self.root, typeDict, labelDict)
+
+        
+    def initializeTypes(self, node, typeDict, labelDict):
+        match node:
+            case Abstraction(inp, out):
+                label = chr(ord('a') + self.count)
+                node.tipus = UndefinedType(label)
+                self.count = self.count + 1
+                
+                self.initializeTypes(inp, typeDict, labelDict)
+                self.initializeTypes(out, typeDict, labelDict)
+                
+            case Application(func, arg):
+                label = chr(ord('a') + self.count)
+                node.tipus = UndefinedType(label)
+                self.count = self.count + 1
+                
+                self.initializeTypes(func, typeDict, labelDict)
+                self.initializeTypes(arg, typeDict, labelDict)
+                
+            case Variable(iden):
+                if iden in typeDict:
+                    node.tipus = DefinedType(typeDict[iden])
+                elif iden in labelDict:
+                    node.tipus = UndefinedType(labelDict[iden])
+                else:
+                    label = chr(ord('a') + self.count)
+                    node.tipus = UndefinedType(label)
+                    labelDict[iden] = label
+                    self.count = self.count + 1
+
+            case Operator(op):
+                opID = op.value
+                if opID in typeDict:
+                    node.tipus = DefinedType(typeDict[opID])
+                elif opID in labelDict:
+                    node.tipus = UndefinedType(labelDict[opID])
+                else:
+                    label = chr(ord('a') + self.count)
+                    node.tipus = UndefinedType(label)
+                    labelDict[opID] = label
+                    self.count = self.count + 1
+                    
+            case Terminal(val):
+                valID = str(val)
+                if valID in typeDict:
+                    node.tipus = DefinedType(typeDict[valID])
+                elif valID in labelDict:
+                    node.tipus = UndefinedType(labelDict[valID])
+                else:
+                    label = chr(ord('a') + self.count)
+                    node.tipus = UndefinedType(label)
+                    labelDict[valID] = label
+                    self.count = self.count + 1
+    
+    
+    
     def toDOT(self):
+        self.count = 0
         dot = ["graph {"]
 
         self.toDOTRecursive(self.root, dot)
@@ -69,7 +160,7 @@ class SemanticTree:
                 nodeID = self.count
                 self.count = self.count + 1
                     
-                dot.append(f'   {nodeID} [label="{termToString(node)}"]')
+                dot.append(f'   {nodeID} [label="{node.toString()}"]')
                 
                 child1ID = self.count
                 
@@ -86,7 +177,7 @@ class SemanticTree:
                 nodeID = self.count
                 self.count = self.count + 1
                     
-                dot.append(f'   {nodeID} [label="{termToString(node)}"]')
+                dot.append(f'   {nodeID} [label="{node.toString()}"]')
                 
                 child1ID = self.count
                 
@@ -103,17 +194,17 @@ class SemanticTree:
                 nodeID = self.count
                 self.count = self.count + 1
                     
-                dot.append(f'   {nodeID} [label="{termToString(node)}"]')
+                dot.append(f'   {nodeID} [label="{node.toString()}"]')
             case Operator(op):
                 nodeID = self.count
                 self.count = self.count + 1
                     
-                dot.append(f'   {nodeID} [label="{termToString(node)}"]')
+                dot.append(f'   {nodeID} [label="{node.toString()}"]')
             case Terminal(val):
                 nodeID = self.count
                 self.count = self.count + 1
                     
-                dot.append(f'   {nodeID} [label="{termToString(node)}"]')
+                dot.append(f'   {nodeID} [label="{node.toString()}"]')
                 
         
         

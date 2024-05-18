@@ -29,6 +29,7 @@ else:
     dotTree = SemanticTree(None).toDOT()
     
     if type(expr) is SemanticTree:
+        expr.inferTypes(typeDict)
         dotTree = expr.toDOT()
     else:
         print('llego')
