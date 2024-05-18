@@ -8,7 +8,7 @@ from visitor.SemanticTree import *
 class LambdaVisitorExpanded(lambdaVisitor):
     # Visit a parse tree produced by lambdaParser#regTerm.
     def visitRegTerm(self, ctx:lambdaParser.RegTermContext):
-        [term] = ctx.getChildren()
+        [term, _] = ctx.getChildren()
         return SemanticTree(self.visit(term))
 
 
@@ -17,24 +17,27 @@ class LambdaVisitorExpanded(lambdaVisitor):
 
     # Visit a parse tree produced by lambdaParser#typeTerm.
     def visitTypeTerm(self, ctx:lambdaParser.TypeTermContext):
-        return self.visitChildren(ctx)
+        [term, _] = ctx.getChildren()
+        return self.visit(term)
 
 
     # Visit a parse tree produced by lambdaParser#literalType.
     def visitLiteralType(self, ctx:lambdaParser.LiteralTypeContext):
         symbol = ctx.NUM().getText()
         tipus = ctx.CAPS().getText()
-        print(symbol)
-        print(tipus)
-        return {symbol : tipus}
+        #print(symbol)
+        #print(tipus)
+        return {symbol : [tipus]}
 
 
     # Visit a parse tree produced by lambdaParser#functionType.
     def visitFunctionType(self, ctx:lambdaParser.FunctionTypeContext):
-        symbol = ctx.left.getText()
-        tipus1 = ctx.right1.getText()
-        tipus2 = ctx.right2.getText()
-        tipus3 = ctx.right3.getText()
+        symbol = ctx.left.text
+        tipus1 = ctx.right1.text
+        tipus2 = ctx.right2.text
+        tipus3 = ctx.right3.text
+        
+        #print(symbol)
         
         return {symbol : [tipus1, tipus2, tipus3]}
 
@@ -86,14 +89,14 @@ class LambdaVisitorExpanded(lambdaVisitor):
     # Visit a parse tree produced by lambdaParser#var.
     def visitVar(self, ctx:lambdaParser.VarContext):
         id = ctx.ID().getText()
-        print(id)
+        #print(id)
         return Variable(id)
 
 
     # Visit a parse tree produced by lambdaParser#atom.
     def visitAtom(self, ctx:lambdaParser.AtomContext):
         value = int(ctx.NUM().getText())
-        print(value)
+        #print(value)
         return Terminal(value)
 
 

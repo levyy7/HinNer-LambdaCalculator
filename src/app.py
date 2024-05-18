@@ -32,7 +32,7 @@ else:
         dotTree = expr.toDOT()
     else:
         print('llego')
-        #print(next(iter( expr.items() )))
+        print(next(iter( expr.items() )))
         typeDict.update(expr)
         
     cols = st.columns(2)

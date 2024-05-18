@@ -5,8 +5,8 @@ root    : term EOF  #regTerm
         | EOF       #nothing
         ;
 
-type    : left=NUM '::' right=CAPS                                              #literalType
-        | '(' left=OP ')' '::' right1=CAPS '->' right2=CAPS '->' right3=CAPS    #functionType
+type    : left=NUM '::' right=CAPS                                                                  #literalType
+        | '(' left=('+' | '-' | '*' | '/') ')' '::' right1=CAPS '->' right2=CAPS '->' right3=CAPS   #functionType
         ;
 
 term    : abstraction   
@@ -43,7 +43,6 @@ SUB : '-';
 MUL : '*';
 DIV : '/';
 POW : '^';
-OP  : ('+' | '-' | '*' | '/');
 NUM : [0-9]+ ;
 ID  : ('a'..'z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
 CAPS: ('A'..'Z')+;
