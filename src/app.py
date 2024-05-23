@@ -10,6 +10,8 @@ st.title("HinNer - Lambda Calculator")
 # If 
 if 'typeDict' not in st.session_state:
     st.session_state['typeDict'] = dumps({})
+if 'exprTree' not in st.session_state:
+    st.session_state['exprTree'] = dumps(SemanticTree(None))
 
 user_input = st.text_input("Lambda Expression:", "")
 
@@ -25,17 +27,20 @@ else:
 
     # Recover type table:
     typeDict = loads(st.session_state['typeDict'])
-
-    dotTree = SemanticTree(None).toDOT()
     
     if type(expr) is SemanticTree:
-        expr.inferTypes(typeDict)
-        dotTree = expr.toDOT()
+        st.session_state['exprTree'] = dumps(expr)
     else:
         print('llego')
         print(next(iter( expr.items() )))
         typeDict.update(expr)
-        
+    
+    
+    exprTree = loads(st.session_state['exprTree'])
+    exprTree.inferTypes(typeDict)
+    dotTree = exprTree.toDOT()
+   
+    
     cols = st.columns(2)
     with cols[0]:
         st.graphviz_chart(dotTree)
