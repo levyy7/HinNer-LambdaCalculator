@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Union, List
 from enum import Enum
-from functools import reduce
 
 #Type classes
 @dataclass
@@ -16,7 +15,7 @@ class DefinedType:
     tipus: List[str]
     
     def toString(self):
-        return reduce((lambda x,y : x + ' -> ' + y), self.tipus[1:], self.tipus[0])
+        return " -> ".join(self.tipus)
     
 VarType = DefinedType | UndefinedType
 

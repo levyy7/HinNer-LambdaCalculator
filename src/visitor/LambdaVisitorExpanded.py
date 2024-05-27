@@ -20,28 +20,11 @@ class LambdaVisitorExpanded(lambdaVisitor):
         [term, _] = ctx.getChildren()
         return self.visit(term)
 
-
-    # Visit a parse tree produced by lambdaParser#literalType.
-    def visitLiteralType(self, ctx:lambdaParser.LiteralTypeContext):
-        symbol = ctx.NUM().getText()
-        tipus = ctx.CAPS().getText()
-        #print(symbol)
-        #print(tipus)
-        return {symbol : [tipus]}
-
-
-    # Visit a parse tree produced by lambdaParser#functionType.
-    def visitFunctionType(self, ctx:lambdaParser.FunctionTypeContext):
+        # Visit a parse tree produced by lambdaParser#type.
+    def visitType(self, ctx:lambdaParser.TypeContext):
         symbol = ctx.left.text
-        tipus1 = ctx.right1.text
-        tipus2 = ctx.right2.text
-        tipus3 = ctx.right3.text
-        
-        #print(symbol)
-        
-        return {symbol : [tipus1, tipus2, tipus3]}
-
-
+        tipos = [tipo.getText() for tipo in ctx.CAPS()]
+        return {symbol : tipos}
 
 
     # Visit a parse tree produced by lambdaParser#nothing.
@@ -102,22 +85,22 @@ class LambdaVisitorExpanded(lambdaVisitor):
 
     # Visit a parse tree produced by lambdaParser#sumOp.
     def visitSumOp(self, ctx:lambdaParser.SumOpContext):
-        return Operator(ArithmeticOP('+'))
+        return Operator(ArithmeticOP('(+)'))
 
 
     # Visit a parse tree produced by lambdaParser#subOp.
     def visitSubOp(self, ctx:lambdaParser.SubOpContext):
-        return Operator(ArithmeticOP('-'))
+        return Operator(ArithmeticOP('(-)'))
 
 
     # Visit a parse tree produced by lambdaParser#mulOp.
     def visitMulOp(self, ctx:lambdaParser.MulOpContext):
-        return Operator(ArithmeticOP('*'))
+        return Operator(ArithmeticOP('(*)'))
 
 
     # Visit a parse tree produced by lambdaParser#divOp.
     def visitDivOp(self, ctx:lambdaParser.DivOpContext):
-        return Operator(ArithmeticOP('/'))
+        return Operator(ArithmeticOP('(/)'))
         
    
     # Visit a parse tree produced by lambdaParser#pterm.

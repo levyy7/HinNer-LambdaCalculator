@@ -1,13 +1,13 @@
 import pandas as pd
 import streamlit as st
-from functools import reduce
 
 
 def createTypeTable(keys, values):
     
     aux = values
     for i in range(len(aux)):
-        aux[i] = reduce((lambda x,y : x + ' -> ' + y), aux[i][1:], aux[i][0])
+        aux[i] = " -> ".join(aux[i])
+        #reduce((lambda x,y : x + ' -> ' + y), aux[i][1:], aux[i][0])
     
     df = pd.DataFrame(
         {

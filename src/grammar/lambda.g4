@@ -5,15 +5,14 @@ root    : term EOF  #regTerm
         | EOF       #nothing
         ;
 
-type    : left=NUM '::' right=CAPS                                                                  #literalType
-        | '(' left=('+' | '-' | '*' | '/') ')' '::' right1=CAPS '->' right2=CAPS '->' right3=CAPS   #functionType
+type    : left=(SUM | SUB | MUL | DIV | NUM) '::' CAPS ('->' CAPS)*
         ;
 
 term    : abstraction   
         | application   
         | var           
         | atom          
-//      | op            
+        | op            
         ;             
 
 
@@ -22,7 +21,7 @@ abstraction :
 
 application     : left=application right=term            #extApp                               
                 | '(' left=abstraction ')' right=term    #absApp
-                | '(' left=op ')' right=term             #opApp
+                |  left=op right=term                    #opApp
                 ;
 
 
@@ -38,11 +37,11 @@ op      : SUM   #sumOp
         | DIV   #divOp
         ;
 
-SUM : '+';
-SUB : '-';
-MUL : '*';
-DIV : '/';
-POW : '^';
+SUM : '(+)';
+SUB : '(-)';
+MUL : '(*)';
+DIV : '(/)';
+POW : '(^)';
 NUM : [0-9]+ ;
 ID  : ('a'..'z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
 CAPS: ('A'..'Z')+;
