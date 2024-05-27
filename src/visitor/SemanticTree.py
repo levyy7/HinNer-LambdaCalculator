@@ -22,10 +22,10 @@ VarType = DefinedType | UndefinedType
 
 
 class ArithmeticOP(Enum):
-    SUM = '+'
-    SUB = '-'
-    MUL = '*'
-    DIV = '/'
+    SUM = '(+)'
+    SUB = '(-)'
+    MUL = '(*)'
+    DIV = '(/)'
 
 @dataclass
 class Terminal:
