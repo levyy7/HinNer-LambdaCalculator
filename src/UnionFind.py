@@ -1,4 +1,4 @@
-## CODIGO DE https://github.com/deehzee/unionfind/blob/master/unionfind.py
+# CODIGO DE https://github.com/deehzee/unionfind/blob/master/unionfind.py
 
 """
 A union-find disjoint set data structure.
@@ -93,7 +93,7 @@ class UnionFind(object):
         self.n_comps = 0  # the number of disjoint sets or components
         self._next = 0  # next available id
         self._elts = []  # the elements
-        self._indx = {}  #  dict mapping elt -> index in _elts
+        self._indx = {}  # dict mapping elt -> index in _elts
         self._par = []  # parent: for the internal tree structure
         self._siz = []  # size of the component - correct only for roots
 
@@ -102,9 +102,8 @@ class UnionFind(object):
         for elt in elements:
             self.add(elt)
 
-
     def __repr__(self):
-        return  (
+        return (
             '<UnionFind:\n\telts={},\n\tsiz={},\n\tpar={},\nn_elts={},n_comps={}>'
             .format(
                 self._elts,

@@ -1,7 +1,64 @@
 from dataclasses import dataclass, field
-from typing import Union, List
-from enum import Enum
+from typing import Union
 from UnionFind import UnionFind
+from exceptions import TypeException
+
+
+def typeListToString(typeList):
+    if type(typeList) is list:
+        l = [typeListToString(tl) for tl in typeList]
+        return '(' + (" -> ".join(l)) + ')'
+    else:
+        return typeList
+
+
+def listify(arg):
+    return arg if isinstance(arg, list) else [arg]
+
+# Redefine UnionFind
+
+
+class UnionFindST(UnionFind):
+
+    def union(self, x: 'TypeGeneric', y: 'TypeGeneric'):
+        """Merge the components of the two given elements into one.
+
+        Parameters
+        ----------
+        x : immutable object
+        y : immutable object
+
+        Returns
+        -------
+        None
+
+        """
+        # Initialize if they are not already in the collection
+        for elt in [x, y]:
+            if elt not in self:
+                self.add(elt)
+
+        xroot = self.find(x)
+        yroot = self.find(y)
+
+        if xroot == yroot:
+            return
+
+        typeX = self._elts[xroot]
+        typeY = self._elts[yroot]
+
+        # Check for errors
+
+        if not compatibleTypes(typeX, typeY):
+            raise TypeException(typeX.toString(), typeY.toString())
+
+        if typeY.isMoreComplexThan(typeX) == 1:
+            self._par[xroot] = yroot
+            self._siz[yroot] += self._siz[xroot]
+        else:
+            self._par[yroot] = xroot
+            self._siz[xroot] += self._siz[yroot]
+        self.n_comps -= 1
 
 
 # Type Classes
@@ -11,327 +68,357 @@ from UnionFind import UnionFind
 class TypeValue:
     value: str
     isDefined: bool
-    
+
     def __hash__(self):
-        print(hash(str(self)))
         return hash(str(self))
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         return hash(str(self)) == hash(str(other))
-    
-    
+
     def toString(self):
         return self.value
-    
 
-@dataclass 
+    def isMoreComplexThan(self, y):
+        match self, y:
+            case (TypeValue(), TypeValue()):
+                if self.isDefined:
+                    return 1
+                elif y.isDefined:
+                    return 0
+                else:
+                    return -1
+
+            case (TypeFunction(), TypeValue()): return 1
+
+            case (TypeValue(), TypeFunction()): return 0
+
+            case (TypeFunction(), TypeFunction()):
+                argXisMoreComplexThanY = self.arg.isMoreComplexThan(y.arg)
+
+                if argXisMoreComplexThanY != -1:
+                    return argXisMoreComplexThanY
+                else:
+                    bodyXisMoreComplexThanY = self.body.isMoreComplexThan(
+                        y.body)
+                    if bodyXisMoreComplexThanY != -1:
+                        return bodyXisMoreComplexThanY
+
+                return -1
+
+
+@dataclass
 class TypeFunction:
     arg: Union['TypeFunction', TypeValue]
     body: Union['TypeFunction', TypeValue]
-    
-    
+
     def __hash__(self):
-        print(hash(str(self)))
         return hash(str(self))
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         return hash(str(self)) == hash(str(other))
-    
-    
+
     @classmethod
-    def fromList(self, lst : list, typeDict : dict = None):
-        if len(lst) == 0: 
+    def fromList(self, lst: list):
+        if len(lst) == 0:
             return None
         if len(lst) == 1:
-            return dict[lst[0]]
+            return TypeValue(lst[0], True)
         elif (len(lst) >= 2):
-            arg = TypeFunction.fromList(lst[0], typeDict)
-            body = TypeFunction.fromList(lst[1:], typeDict)
+            arg = TypeFunction.fromList(listify(lst[0]))
+            body = TypeFunction.fromList(listify(lst[1:]))
             return TypeFunction(arg, body)
-        
-    
+
     def toList(self):
-        argl = self.arg.toList() if type(self.arg) is TypeFunction else self.arg.value
-        bodyl = self.body.toList() if type(self.body) is TypeFunction else [self.body.value]
-        
-        return [argl] + bodyl
-    
+        argl = [self.arg.toList()] if isinstance(
+            self.arg, TypeFunction) else [self.arg.value]
+        bodyl = self.body.toList() if isinstance(
+            self.body, TypeFunction) else [self.body.value]
+
+        return argl + bodyl
+
     def toString(self):
-        str1 = self.arg.toString()
-        str2 = self.body.toString()
-        return '(' + str1 + ' -> ' + str2  + ')'
-    
+        typeList = self.toList()
+
+        return typeListToString(typeList)[1:-1]
+
     def copy(self):
         return TypeFunction(self.arg.copy(), self.body.copy())
-        
- 
-   
+
+    def isMoreComplexThan(self, y):
+        match self, y:
+            case (TypeValue(), TypeValue()):
+                if self.isDefined:
+                    return 1
+                elif y.isDefined:
+                    return 0
+                else:
+                    return -1
+
+            case (TypeFunction(), TypeValue()): return 1
+
+            case (TypeValue(), TypeFunction()): return 0
+
+            case (TypeFunction(), TypeFunction()):
+                argXisMoreComplexThanY = self.arg.isMoreComplexThan(y.arg)
+
+                if argXisMoreComplexThanY != -1:
+                    return argXisMoreComplexThanY
+                else:
+                    bodyXisMoreComplexThanY = self.body.isMoreComplexThan(
+                        y.body)
+                    if bodyXisMoreComplexThanY != -1:
+                        return bodyXisMoreComplexThanY
+
+                return -1
+
+
 TypeGeneric = TypeValue | TypeFunction
+
+# Type Functions
+
+
+def compatibleTypes(t1, t2):
+    match (t1, t2):
+        case (TypeValue(), TypeValue()):
+            if t1.isDefined and t2.isDefined:
+                return t1.value == t2.value
+            else:
+                return True
+        case (TypeValue(), TypeFunction()):
+            if t1.isDefined or isInFunction(t1, t2):
+                return False
+            else:
+                return True
+        case(TypeFunction(), TypeValue()):
+            return compatibleTypes(t2, t1)
+        case (TypeFunction(), TypeFunction()):
+            argCompatible = compatibleTypes(t1.arg, t2.arg)
+            bodyCompatible = compatibleTypes(t1.body, t2.body)
+            return argCompatible and bodyCompatible
+
+
+def isInFunction(t1: TypeValue, t2: TypeFunction):
+    if isinstance(t2.arg, TypeValue):
+        inArg = t1.value == t2.arg.value
+    else:
+        inArg = isInFunction(t1, t2.arg)
+
+    if isinstance(t2.body, TypeValue):
+        inBody = t1.value == t2.body.value
+    else:
+        inBody = isInFunction(t1, t2.body)
+
+    return inArg or inBody
 
 
 # Lambda Classes
-
-class ArithmeticOP(Enum):
-    SUM = '(+)'
-    SUB = '(-)'
-    MUL = '(*)'
-    DIV = '(/)'
-
-@dataclass
-class Terminal:
-    val: int
-    tipus: TypeGeneric = field(default=TypeValue('-1', False))
-    
-    def toString(self):
-        return f'{str(self.val)} \n {self.tipus.toString()}'
-
-@dataclass
-class Operator:
-    op: ArithmeticOP
-    tipus: TypeGeneric = field(default=TypeValue('-1', False))
-    
-    def toString(self):
-        return f'{self.op.value} \n {self.tipus.toString()}'
 
 @dataclass
 class Variable:
     id: str
     tipus: TypeGeneric = field(default=TypeValue('-1', False))
-    
+
     def toString(self):
         return f'{self.id} \n {self.tipus.toString()}'
 
+
 @dataclass
 class Application:
-    function: Union['Operator','Application']
+    function: 'Term'
     argument: 'Term'
     tipus: TypeGeneric = field(default=TypeValue('-1', False))
-    
+
     def toString(self):
         return f'@ \n {self.tipus.toString()}'
-  
+
+
 @dataclass
 class Abstraction:
     input: 'Variable'
     output: 'Term'
     tipus: TypeGeneric = field(default=TypeValue('-1', False))
-    
+
     def toString(self):
         return f'λ \n {self.tipus.toString()}'
 
-Term = Terminal | Operator | Variable | Application | Abstraction
+
+Term = Variable | Application | Abstraction
 
 
-
-#SemanticTree Class
+# SemanticTree Class
 
 class SemanticTree:
-    
-    def __init__(self, t : Term):
+
+    def __init__(self, t: Term):
         self.root = t
-        self.unfi = UnionFind()
-    
-    
-    def inferTypes(self, typeDict):
+        self.unfi = UnionFindST()
+        self.count = 0
+        self.inferredDict = {}
+
+    def initializeTypes(self, typeDict):
         self.count = 0
         labelDict = {}
-        
-        self.initializeTypes(self.root, typeDict, labelDict)
-        
-        #self.hindleyMilner(self.root, typeDict, labelDict)
 
-        
-    def initializeTypes(self, node, typeDict, labelDict):
+        self.initializeTypesRec(self.root, typeDict, labelDict)
+
+    def initializeTypesRec(self, node, typeDict, labelDict):
         match node:
             case Abstraction(inp, out):
                 label = chr(ord('a') + self.count)
                 node.tipus = TypeValue(label, False)
-                
+
                 self.count = self.count + 1
                 self.unfi.add(node.tipus)
-                
-                self.initializeTypes(inp, typeDict, labelDict)
-                self.initializeTypes(out, typeDict, labelDict)
-                
+
+                self.initializeTypesRec(inp, typeDict, labelDict)
+                self.initializeTypesRec(out, typeDict, labelDict)
+
             case Application(func, arg):
                 label = chr(ord('a') + self.count)
                 node.tipus = TypeValue(label, False)
-                
+
                 self.count = self.count + 1
                 self.unfi.add(node.tipus)
-                
-                self.initializeTypes(func, typeDict, labelDict)
-                self.initializeTypes(arg, typeDict, labelDict)
-                
+
+                self.initializeTypesRec(func, typeDict, labelDict)
+                self.initializeTypesRec(arg, typeDict, labelDict)
+
             case Variable(iden):
                 if iden in typeDict:
                     lst = typeDict[iden]
-                    node.tipus = TypeFunction.fromList(lst) if len(lst) >= 2 else TypeValue(lst[0], True)
+                    node.tipus = TypeFunction.fromList(lst) if len(
+                        lst) >= 2 else TypeValue(lst[0], True)
+                    self.unfi.add(node.tipus)
                 elif iden in labelDict:
                     node.tipus = labelDict[iden]
                 else:
                     label = chr(ord('a') + self.count)
                     node.tipus = TypeValue(label, False)
                     labelDict[iden] = node.tipus
-                    
+
                     self.unfi.add(node.tipus)
                     self.count = self.count + 1
 
-            case Operator(op):
-                opID = op.value
-                if opID in typeDict:
-                    lst = typeDict[opID]
-                    node.tipus = TypeFunction.fromList(lst) if len(lst) >= 2 else TypeValue(lst[0], True)
-                elif opID in labelDict:
-                    node.tipus = labelDict[opID]
-                else:
-                    label = chr(ord('a') + self.count)
-                    node.tipus = TypeValue(label, False)
-                    labelDict[opID] = node.tipus
-                    
-                    self.count = self.count + 1
-                    self.unfi.add(node.tipus)
-                    
-            case Terminal(val):
-                valID = str(val)
-                if valID in typeDict:
-                    lst = typeDict[valID]
-                    node.tipus = TypeFunction.fromList(lst) if len(lst) >= 2 else TypeValue(lst[0], True)
-                elif valID in labelDict:
-                    node.tipus = labelDict[valID]
-                else:
-                    label = chr(ord('a') + self.count)
-                    node.tipus = TypeValue(label, False)
-                    labelDict[valID] = node.tipus
-                    
-                    self.count = self.count + 1
-                    self.unfi.add(node.tipus)
-    
-    def hindleyMilner(self, node, typeDict, labelDict):
+    def inferTypes(self):
+
+        self.unfi.add(TypeValue('z', True))
+
+        self.hindleyMilner(self.root)
+
+        for component in self.unfi.components():
+            root = self.unfi[self.unfi.find(list(component)[0])]
+            self.propagateTypes(root)
+
+        for component in self.unfi.components():
+            for element in component:
+                if isinstance(element, TypeValue) and not element.isDefined:
+                    root = self.unfi[self.unfi.find(element)]
+                    self.inferredDict[element.value] = root.toList() if isinstance(
+                        root, TypeFunction) else [root.value]
+
+        self.inferredDict = dict(sorted(self.inferredDict.items()))
+
+    def hindleyMilner(self, node):
         match node:
-            #case Abstraction(inp, out):
-                #nodeLeft = self.hindleyMilner(inp, typeDict, labelDict)
-                #nodeRight = self.hindleyMilner(out, typeDict, labelDict)
-                
-                #label = chr(ord('a') + self.count)
-                #node.tipus = UndefinedType(label)
-                #self.count = self.count + 1
-                
-                
-                
+            case Abstraction(inp, out):
+                self.hindleyMilner(inp)
+                self.hindleyMilner(out)
+
+                self.unify(node.tipus, TypeFunction(inp.tipus, out.tipus))
+
             case Application(func, arg):
-                self.hindleyMilner(func, typeDict, labelDict)
-                self.hindleyMilner(arg, typeDict, labelDict)
-                
+                self.hindleyMilner(func)
+                self.hindleyMilner(arg)
+
                 self.unify(TypeFunction(arg.tipus, node.tipus), func.tipus)
-                
-                
             case Variable(iden):
                 return
 
-            case Operator(op):
-                return
-                    
-            case Terminal(val):
-                return
-                
-                
-    #Tratara de unificar los dos terminos, modificando el de la derecha
-    def unify(self, t1, t2):
-        match (t1, t2):
-            case (TypeValue(), TypeValue()):
-                if t1.isDefined: self.propagate(t1, t2)
-                elif t2.isDefined: self.propagate(t2, t1)
-            case (TypeValue(), TypeFunction()):
-                self.unify(t2, t1)
-            case(TypeFunction(), TypeValue()):
-                self.propagate(t1, t2)
-            case (TypeFunction(), TypeFunction()):
-                t1l = t1.toList()
-                t2l = t2.toList()
-                
-                if len(t1l) != len(t2l): return "error"
-                
-                for (subTerm1, subTerm2) in zip(t1l, t2l):
-                    self.unify(subTerm1, subTerm2)
-                
+    def propagateTypes(self, t):
+        nType = self.propagateTypesRec(t)
+        self.unfi.union(t, nType)
 
-    def propagate(self, toBePropagated : TypeGeneric, propagateTo : TypeGeneric):
-        tbl = toBePropagated.toList()
-        
-        for t in self.unfi.component(propagateTo):
-            tl = t.toList()
-            
-            #HACE FALTA TRATAR ERRORES
-            #utulizar diccionaro labelDict para ver el tipo actual y cambiarlo
-            
-            """
-            if toBePropagated.isDefined and t.isDefined:
-                if len(tbl) != len(tl): return "error"
-                for (tbi, ti) in zip(tbl, tl): 
-                    if tbi != ti: return "error"
-            """
-                
-                 
+    def propagateTypesRec(self, t):
+        if not t in self.unfi:
+            return t
+        tRoot = self.unfi[self.unfi.find(t)]
+        match tRoot:
+            case TypeValue():
+                return tRoot
+            case TypeFunction():
+                arg = self.propagateTypesRec(tRoot.arg)
+                body = self.propagateTypesRec(tRoot.body)
+                return TypeFunction(arg, body)
+
+    # Tratara de unificar los dos terminos, modificando el de la derecha
+
+    def unify(self, t1, t2):
+        t1root = self.unfi[self.unfi.find(t1)] if t1 in self.unfi else t1
+        t2root = self.unfi[self.unfi.find(t2)] if t2 in self.unfi else t2
+
+        match (t1root, t2root):
+            case (TypeValue(), TypeValue()):
+                self.unfi.union(t1root, t2root)
+            case (TypeValue(), TypeFunction()):
+                self.unfi.union(t1root, t2root)
+            case(TypeFunction(), TypeValue()):
+                self.unfi.union(t1root, t2root)
+            case (TypeFunction(), TypeFunction()):
+                self.unify(t1root.arg, t2root.arg)
+                self.unify(t1root.body, t2root.body)
+
     def toDOT(self):
         self.count = 0
         dot = ["graph {"]
 
         self.toDOTRecursive(self.root, dot)
-        
+
         dot.append("}")
 
         return "\n".join(dot)
 
-    
     def toDOTRecursive(self, node, dot):
         match node:
             case Abstraction(inp, out):
                 nodeID = self.count
                 self.count = self.count + 1
-                    
-                dot.append(f'   {nodeID} [label="{node.toString()}"]')
-                
+
+                nodeRoot = self.unfi[self.unfi.find(node.tipus)]
+                dot.append(f'   {nodeID} [label="λ \n {nodeRoot.toString()}"]')
+
                 child1ID = self.count
-                
+
                 self.toDOTRecursive(inp, dot)
-                
+
                 child2ID = self.count
-                
+
                 self.toDOTRecursive(out, dot)
-                
+
                 dot.append(f'   {nodeID} -- {child1ID}')
                 dot.append(f'   {nodeID} -- {child2ID}')
-                
+
             case Application(func, arg):
                 nodeID = self.count
                 self.count = self.count + 1
-                    
-                dot.append(f'   {nodeID} [label="{node.toString()}"]')
-                
+
+                nodeRoot = self.unfi[self.unfi.find(node.tipus)]
+                dot.append(f'   {nodeID} [label="@ \n {nodeRoot.toString()}"]')
+
                 child1ID = self.count
-                
+
                 self.toDOTRecursive(func, dot)
-                
+
                 child2ID = self.count
-                
+
                 self.toDOTRecursive(arg, dot)
-                
+
                 dot.append(f'   {nodeID} -- {child1ID}')
                 dot.append(f'   {nodeID} -- {child2ID}')
-                
+
             case Variable(iden):
                 nodeID = self.count
                 self.count = self.count + 1
-                    
-                dot.append(f'   {nodeID} [label="{node.toString()}"]')
-            case Operator(op):
-                nodeID = self.count
-                self.count = self.count + 1
-                    
-                dot.append(f'   {nodeID} [label="{node.toString()}"]')
-            case Terminal(val):
-                nodeID = self.count
-                self.count = self.count + 1
-                    
-                dot.append(f'   {nodeID} [label="{node.toString()}"]')
+
+                nodeRoot = self.unfi[self.unfi.find(node.tipus)]
+                dot.append(
+                    f'   {nodeID} [label="{iden} \n {nodeRoot.toString()}"]')

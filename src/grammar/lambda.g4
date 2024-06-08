@@ -5,44 +5,26 @@ root    : term EOF  #regTerm
         | EOF       #nothing
         ;
 
-type    : left=(SUM | SUB | MUL | DIV | NUM) '::' CAPS ('->' CAPS)*
+type    : left=(OP | NUM | ID) '::' typeRec ('->' typeRec)*
         ;
 
-term    : abstraction   
-        | application   
-        | var           
-        | atom          
-        | op            
+typeRec : '(' typeRec '->' typeRec ('->' typeRec)* ')'  #typeFunction
+        | CAPS                                          #typeValue
+        ;
+
+term    : '(' term ')'                                  #termParenthesis
+        | term term                                     #application
+        | '\\' left=ID '->' right=term                  #abstraction
+        | ID                                            #id
+        | NUM                                           #num
+        | OP                                            #op
         ;             
 
 
-abstraction :
-        <assoc=right> '\\' left=var '->' right=term ;
-
-application     : left=application right=term            #extApp                               
-                | '(' left=abstraction ')' right=term    #absApp
-                |  left=op right=term                    #opApp
-                ;
-
-
-var     : ID
-        ;
-
-atom    : 
-        NUM;
-
-op      : SUM   #sumOp
-        | SUB   #subOp
-        | MUL   #mulOp
-        | DIV   #divOp
-        ;
-
-SUM : '(+)';
-SUB : '(-)';
-MUL : '(*)';
-DIV : '(/)';
-POW : '(^)';
+OP : '(+)' | '(-)' | '(*)' | '(/)' | '(^)';
 NUM : [0-9]+ ;
 ID  : ('a'..'z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
 CAPS: ('A'..'Z')+;
 WS  : [ \t\n\r]+ -> skip ;
+
+LEXICAL_ERROR : . ;
