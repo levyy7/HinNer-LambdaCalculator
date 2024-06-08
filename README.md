@@ -17,7 +17,7 @@ Those lines define `2` as type `N`, `(+)` as type `N -> N -> N` and finally the 
 
 ![](/img/fig1.png)
 
-If we focus at the root of the tree, we can see that the inferred type of `\x -> (+) 2 x` is `N`.
+If we focus at the root of the tree, we can see that the inferred type of `\x -> (+) 2 x` is `N -> N`.
 
 
 ### Grammar
