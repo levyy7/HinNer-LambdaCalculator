@@ -331,7 +331,7 @@ class SemanticTree:
                 self.hindleyMilner(arg)
 
                 self.unify(TypeFunction(arg.tipus, node.tipus), func.tipus)
-            case Variable(iden):
+            case Variable():
                 return
 
     def propagateTypes(self, t):

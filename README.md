@@ -15,7 +15,7 @@ The app allows as input a *haskell*-like language to codify expressions and type
 
 Those lines define `2` as type `N`, `(+)` as type `N -> N -> N` and finally the expression `\x -> (+) 2 x`. When typing the final expression the app displays the following parsing tree:
 
-[](fig1.png)
+[](/img/fig1.png)
 
 If we focus at the root of the tree, we can see that the inferred type of `\x -> (+) 2 x` is `N`.
 
@@ -34,7 +34,7 @@ The file [lambda.g4](src/grammar/lambda.g4) defines the accepted input grammar u
   foldl (\x -> \y -> (+) x y) 0 xs
   ```
 
-- A type expression codified in a *haskell*-like way. These expressions consist in a label on the left side (eg. numbers, strings starting by lowecase letters...) and a type declaration on the right side (in capital letters).
+- A type expression codified in a *haskell*-like way. These expressions consist in a label on the left side (e.g. numbers, strings starting by lowecase letters...) and a type declaration on the right side (in capital letters).
   ```haskell
   2 :: N
   (+) :: N -> N -> N
@@ -54,7 +54,6 @@ def hindleyMilner(self, node):
             self.hindleyMilner(out)
 
             self.unify(node.tipus, TypeFunction(inp.tipus, out.tipus))
-
         case Application(func, arg):
             self.hindleyMilner(func)
             self.hindleyMilner(arg)
