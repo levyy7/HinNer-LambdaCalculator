@@ -15,7 +15,7 @@ The app allows as input a *haskell*-like language to codify expressions and type
 
 Those lines define `2` as type `N`, `(+)` as type `N -> N -> N` and finally the expression `\x -> (+) 2 x`. When typing the final expression the app displays the following parsing tree:
 
-[](/img/fig1.png)
+![](/img/fig1.png)
 
 If we focus at the root of the tree, we can see that the inferred type of `\x -> (+) 2 x` is `N`.
 
@@ -89,7 +89,7 @@ Credits to [deehzee](https://github.com/deehzee/unionfind) for the *Union-Find* 
 
 A demonstration of the inference the app is capable of:
 
-[](/img/fig2.png)
+![](/img/fig2.png)
 
 
 ## Usage
