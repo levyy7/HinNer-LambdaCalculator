@@ -1,6 +1,4 @@
 
 # Grammar generated files
 
-*.interp
-*.tokens
 src/grammar/__pycache__

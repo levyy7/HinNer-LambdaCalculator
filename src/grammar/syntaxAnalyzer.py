@@ -1,6 +1,7 @@
 from antlr4 import *
 from .lambdaLexer import lambdaLexer
 from .lambdaParser import lambdaParser
+from exceptions import SyntaxException
 
 def syntaxInfo(input):
     lexer = lambdaLexer(InputStream(input))
@@ -11,4 +12,9 @@ def syntaxInfo(input):
     numErrors = parser.getNumberOfSyntaxErrors()
     syntaxExpr = parseTree.toStringTree(recog=parser)
     
-    return parseTree, numErrors, syntaxExpr
+    print(syntaxExpr)
+    
+    if numErrors > 0:
+        raise SyntaxException(numErrors, syntaxExpr)
+    
+    return parseTree

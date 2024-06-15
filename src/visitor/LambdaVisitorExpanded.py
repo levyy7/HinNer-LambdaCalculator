@@ -6,90 +6,74 @@ from visitor.SemanticTree import *
 
 
 class LambdaVisitorExpanded(lambdaVisitor):
+
+    # ROOT
+
     # Visit a parse tree produced by lambdaParser#regTerm.
-    def visitRegTerm(self, ctx:lambdaParser.RegTermContext):
-        [term] = ctx.getChildren()
+    def visitRegTerm(self, ctx: lambdaParser.RegTermContext):
+        [term, _] = ctx.getChildren()
         return SemanticTree(self.visit(term))
 
+    # Visit a parse tree produced by lambdaParser#typeTerm.
+    def visitTypeTerm(self, ctx: lambdaParser.TypeTermContext):
+        [term, _] = ctx.getChildren()
+        return self.visit(term)
 
     # Visit a parse tree produced by lambdaParser#nothing.
-    def visitNothing(self, ctx:lambdaParser.NothingContext):
+    def visitNothing(self, ctx: lambdaParser.NothingContext):
         return SemanticTree(None)
 
+    # TYPE
 
-    # Visit a parse tree produced by lambdaParser#term.
-    def visitTerm(self, ctx:lambdaParser.TermContext):
-        return self.visitChildren(ctx)
+    # Visit a parse tree produced by lambdaParser#type.
 
+    def visitType(self, ctx: lambdaParser.TypeContext):
+        symbol = ctx.left.text
+        tipos = [self.visit(tipo) for tipo in ctx.typeRec()]
+        return {symbol: tipos}
+
+    # Visit a parse tree produced by lambdaParser#typeFunction.
+    def visitTypeFunction(self, ctx: lambdaParser.TypeFunctionContext):
+        return [self.visit(tipo) for tipo in ctx.typeRec()]
+
+    # Visit a parse tree produced by lambdaParser#typeValue.
+    def visitTypeValue(self, ctx: lambdaParser.TypeValueContext):
+        return ctx.CAPS().getText()
+
+    # TERM
+
+    # Visit a parse tree produced by lambdaParser#termParenthesis.
+
+    def visitTermParenthesis(self, ctx: lambdaParser.TermParenthesisContext):
+        [_, term, _] = ctx.getChildren()
+        return self.visit(term)
 
     # Visit a parse tree produced by lambdaParser#abstraction.
-    def visitAbstraction(self, ctx:lambdaParser.AbstractionContext):
-        inp = ctx.left
+    def visitAbstraction(self, ctx: lambdaParser.AbstractionContext):
+        inp = Variable(ctx.ID().getText())
         out = ctx.right
 
-        return Abstraction(self.visit(inp), self.visit(out))
+        return Abstraction(inp, self.visit(out))
 
+    # Visit a parse tree produced by lambdaParser#application.
+    def visitApplication(self, ctx: lambdaParser.ApplicationContext):
+        [term1, term2] = ctx.getChildren()
+        return Application(self.visit(term1), self.visit(term2))
 
-    # Visit a parse tree produced by lambdaParser#opApp.
-    def visitOpApp(self, ctx:lambdaParser.OpAppContext):
-        func = ctx.left
-        arg = ctx.right
+    # Visit a parse tree produced by lambdaParser#op.
+    def visitOp(self, ctx: lambdaParser.OpContext):
+        op = ctx.OP().getText()
+        # print(id)
+        return Variable(op)
 
-        return Application(self.visit(func), self.visit(arg))
+    # Visit a parse tree produced by lambdaParser#num.
+    def visitNum(self, ctx: lambdaParser.NumContext):
+        num = ctx.NUM().getText()
+        # print(id)
+        return Variable(num)
 
-
-    # Visit a parse tree produced by lambdaParser#extApp.
-    def visitExtApp(self, ctx:lambdaParser.ExtAppContext):
-        func = ctx.left
-        arg = ctx.right
-
-        return Application(self.visit(func), self.visit(arg))
-
-
-    # Visit a parse tree produced by lambdaParser#absApp.
-    def visitAbsApp(self, ctx:lambdaParser.AbsAppContext):
-        func = ctx.left
-        arg = ctx.right
-
-        return Application(self.visit(func), self.visit(arg))
-
-
-    # Visit a parse tree produced by lambdaParser#var.
-    def visitVar(self, ctx:lambdaParser.VarContext):
-        id = ctx.ID().getText()
-        print(id)
-        return Variable(id)
-
-
-    # Visit a parse tree produced by lambdaParser#atom.
-    def visitAtom(self, ctx:lambdaParser.AtomContext):
-        value = int(ctx.NUM().getText())
-        print(value)
-        return Terminal(value)
-
-
-    # Visit a parse tree produced by lambdaParser#sumOp.
-    def visitSumOp(self, ctx:lambdaParser.SumOpContext):
-        return Operator(ArithmeticOP('+'))
-
-
-    # Visit a parse tree produced by lambdaParser#subOp.
-    def visitSubOp(self, ctx:lambdaParser.SubOpContext):
-        return Operator(ArithmeticOP('-'))
-
-
-    # Visit a parse tree produced by lambdaParser#mulOp.
-    def visitMulOp(self, ctx:lambdaParser.MulOpContext):
-        return Operator(ArithmeticOP('*'))
-
-
-    # Visit a parse tree produced by lambdaParser#divOp.
-    def visitDivOp(self, ctx:lambdaParser.DivOpContext):
-        return Operator(ArithmeticOP('/'))
-        
-   
-    # Visit a parse tree produced by lambdaParser#pterm.
-    #def visitPterm(self, ctx:lambdaParser.PtermContext):
-    #    return self.visitChildren(ctx)
-
-        
+    # Visit a parse tree produced by lambdaParser#id.
+    def visitId(self, ctx: lambdaParser.IdContext):
+        iden = ctx.ID().getText()
+        # print(id)
+        return Variable(iden)
