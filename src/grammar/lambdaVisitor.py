@@ -14,13 +14,43 @@ class lambdaVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by lambdaParser#typeTerm.
+    def visitTypeTerm(self, ctx:lambdaParser.TypeTermContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by lambdaParser#nothing.
     def visitNothing(self, ctx:lambdaParser.NothingContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by lambdaParser#term.
-    def visitTerm(self, ctx:lambdaParser.TermContext):
+    # Visit a parse tree produced by lambdaParser#type.
+    def visitType(self, ctx:lambdaParser.TypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by lambdaParser#typeFunction.
+    def visitTypeFunction(self, ctx:lambdaParser.TypeFunctionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by lambdaParser#typeValue.
+    def visitTypeValue(self, ctx:lambdaParser.TypeValueContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by lambdaParser#op.
+    def visitOp(self, ctx:lambdaParser.OpContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by lambdaParser#application.
+    def visitApplication(self, ctx:lambdaParser.ApplicationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by lambdaParser#termParenthesis.
+    def visitTermParenthesis(self, ctx:lambdaParser.TermParenthesisContext):
         return self.visitChildren(ctx)
 
 
@@ -29,48 +59,13 @@ class lambdaVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by lambdaParser#opApp.
-    def visitOpApp(self, ctx:lambdaParser.OpAppContext):
+    # Visit a parse tree produced by lambdaParser#num.
+    def visitNum(self, ctx:lambdaParser.NumContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by lambdaParser#extApp.
-    def visitExtApp(self, ctx:lambdaParser.ExtAppContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#absApp.
-    def visitAbsApp(self, ctx:lambdaParser.AbsAppContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#var.
-    def visitVar(self, ctx:lambdaParser.VarContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#atom.
-    def visitAtom(self, ctx:lambdaParser.AtomContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#sumOp.
-    def visitSumOp(self, ctx:lambdaParser.SumOpContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#subOp.
-    def visitSubOp(self, ctx:lambdaParser.SubOpContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#mulOp.
-    def visitMulOp(self, ctx:lambdaParser.MulOpContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by lambdaParser#divOp.
-    def visitDivOp(self, ctx:lambdaParser.DivOpContext):
+    # Visit a parse tree produced by lambdaParser#id.
+    def visitId(self, ctx:lambdaParser.IdContext):
         return self.visitChildren(ctx)
 
 
